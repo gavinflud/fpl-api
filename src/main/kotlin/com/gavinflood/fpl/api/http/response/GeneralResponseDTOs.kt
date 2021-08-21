@@ -11,7 +11,7 @@ data class GeneralResponse(
 ) : DTO
 
 data class GeneralResponseEvent(
-    val id: Long,
+    val id: Int,
     val name: String,
     val deadline_time: Date,
     val average_entry_score: Int,
@@ -25,13 +25,14 @@ data class GeneralResponseEvent(
     val most_selected: Long,
     val most_transferred_in: Long,
     val top_element: Long,
+    val transfers_made: Int,
     val most_captained: Long,
     val most_vice_captained: Long
 )
 
 data class GeneralResponseEventChipPlay(
     val chip_name: String,
-    val num_played: Long
+    val num_played: Int
 )
 
 data class GeneralResponsePhase(
@@ -80,7 +81,7 @@ data class GeneralResponsePlayer(
     val event_points: Int,
     val first_name: String,
     val form: String,
-    val id: Long,
+    val id: Int,
     val in_dreamteam: Boolean,
     val news: String,
     val news_added: Date?,
@@ -88,7 +89,7 @@ data class GeneralResponsePlayer(
     val photo: String,
     val points_per_game: String,
     val second_name: String,
-    val selected_by_percent: String,
+    val selected_by_percent: Double,
     val special: Boolean,
     val squad_number: Int,
     val status: String,

@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.5.10"
+    kotlin("plugin.serialization") version "1.5.21"
 }
 
 group = "com.gavinflood.fpl.api"
@@ -16,6 +17,7 @@ repositories {
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     implementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.4")
     implementation("com.squareup.okhttp3:mockwebserver:4.9.0")
 }
