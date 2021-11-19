@@ -1,6 +1,6 @@
 package com.gavinflood.fpl.api.http.response
 
-import java.util.*
+import java.time.LocalDateTime
 
 class FixturesResponse : ArrayList<FixturesResponseDetail>(), DTO
 
@@ -9,8 +9,8 @@ data class FixturesResponseDetail(
     val event: Int,
     val finished: Boolean,
     val finished_provisional: Boolean,
-    val id: Long,
-    val kickoff_time: Date,
+    val id: Int,
+    val kickoff_time: LocalDateTime,
     val minutes: Int,
     val provisional_start_time: Boolean,
     val started: Boolean,
@@ -32,5 +32,5 @@ data class FixturesResponseStats(
 
 data class FixturesResponseStat(
     val value: Int,
-    val element: Long
+    val element: Int
 )

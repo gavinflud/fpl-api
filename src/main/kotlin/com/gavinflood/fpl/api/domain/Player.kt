@@ -31,9 +31,9 @@ enum class Position(val id: Int) {
     FORWARD(4);
 
     companion object {
-        private val values = Position.values().associateBy(Position::id)
+        private val values = values().associateBy(Position::id)
 
-        fun valueOf(id: Int) = values.getValue(id)
+        fun getEnumById(id: Int) = values.getValue(id)
     }
 
 }

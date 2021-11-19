@@ -1,5 +1,6 @@
 package com.gavinflood.fpl.api.http.response
 
+import java.time.LocalDateTime
 import java.util.*
 
 data class GeneralResponse(
@@ -13,7 +14,7 @@ data class GeneralResponse(
 data class GeneralResponseEvent(
     val id: Int,
     val name: String,
-    val deadline_time: Date,
+    val deadline_time: LocalDateTime,
     val average_entry_score: Int,
     val finished: Boolean,
     val highest_scoring_entry: Long,

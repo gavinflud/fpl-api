@@ -19,6 +19,7 @@ dependencies {
     implementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.4")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.4")
     implementation("com.squareup.okhttp3:mockwebserver:4.9.0")
 }
 

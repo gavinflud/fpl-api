@@ -1,9 +1,6 @@
 package com.gavinflood.fpl.api
 
-import com.gavinflood.fpl.api.domain.GameWeek
-import com.gavinflood.fpl.api.domain.Player
-import com.gavinflood.fpl.api.domain.Position
-import com.gavinflood.fpl.api.domain.Team
+import com.gavinflood.fpl.api.domain.*
 import com.gavinflood.fpl.api.http.Client
 import com.gavinflood.fpl.api.mapper.Mapper
 
@@ -41,8 +38,11 @@ class API {
      */
     fun getPlayers(): List<Player> {
         val generalInfo = client.getGeneralInfo()
-        val teams = generalInfo.teams.map { teamDTO -> mapper.mapTeam(teamDTO) }
-        val findTeamById = { id: Int -> teams.first { team -> team.id == id } }
+        val findTeamById = { id: Int ->
+            generalInfo.teams
+                .map { teamDTO -> mapper.mapTeam(teamDTO) }
+                .first { team -> team.id == id }
+        }
         return generalInfo.elements.map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById) }
     }
 
@@ -60,12 +60,48 @@ class API {
         val team = mapper.mapTeam(generalInfo.teams.first { it.id == id })
         return generalInfo.elements
             .filter { playerDTO -> playerDTO.team == id }
-            .map { mapper.mapPlayer(it, team) }
+            .map { playerDTO -> mapper.mapPlayer(playerDTO, team) }
     }
 
     /**
      * Get a single player given their [id].
      */
     fun getPlayer(id: Int): Player = getPlayers().first { player -> player.id == id }
+
+    /**
+     * Get all fixtures for the season.
+     */
+    fun getFixtures(): List<Fixture> {
+        val generalInfo = client.getGeneralInfo()
+        val findTeamById = { id: Int ->
+            generalInfo.teams
+                .map { teamDTO -> mapper.mapTeam(teamDTO) }
+                .first { team -> team.id == id }
+        }
+        val findGameWeekById = { id: Int ->
+            generalInfo.events
+                .map { gameWeekDTO -> mapper.mapGameWeek(gameWeekDTO) }
+                .first { gameWeek -> gameWeek.id == id }
+        }
+        val findPlayerById = { id: Int ->
+            generalInfo.elements
+                .map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById(playerDTO.team)) }
+                .first { player -> player.id == id }
+        }
+        return client.getFixtures().map { fixtureDTO ->
+            mapper.mapFixture(fixtureDTO, findGameWeekById, findTeamById, findPlayerById)
+        }
+    }
+
+    /**
+     * Get a single fixture given its [id].
+     */
+    fun getFixture(id: Int): Fixture = getFixtures().first { fixture -> fixture.id == id }
+
+    /**
+     * Get all fixtures for a team given its [teamId].
+     */
+    fun getFixturesForTeam(teamId: Int): List<Fixture> =
+        getFixtures().filter { fixture -> fixture.homeTeam.id == teamId || fixture.awayTeam.id == teamId }
 
 }

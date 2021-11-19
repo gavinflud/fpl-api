@@ -2,6 +2,8 @@ package com.gavinflood.fpl.api.http
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.gavinflood.fpl.api.http.response.*
 import com.gavinflood.fpl.api.properties.FplProperties
@@ -85,6 +87,10 @@ class Client() {
      * response from the API that don't have a corresponding DTO property don't cause a hard failure.
      */
     private fun initializeMapper(): ObjectMapper =
-        ObjectMapper().registerKotlinModule().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        ObjectMapper()
+            .registerKotlinModule()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
 }

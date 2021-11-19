@@ -1,8 +1,8 @@
 package com.gavinflood.fpl.api.domain
 
-import com.gavinflood.fpl.api.serialize.DateSerializer
+import com.gavinflood.fpl.api.serialize.LocalDateTimeSerializer
 import kotlinx.serialization.Serializable
-import java.util.*
+import java.time.LocalDateTime
 
 /**
  * Represents a game-week.
@@ -13,9 +13,9 @@ class GameWeek(
     val name: String,
     val averageScore: Int,
     val isCurrent: Boolean,
-    val chipPlays: List<ChipPlay>,
+    val chipPlays: List<ChipPlayTotal>,
     val numTransfersMade: Int,
 
-    @Serializable(with = DateSerializer::class)
-    val deadline: Date,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val deadline: LocalDateTime,
 )

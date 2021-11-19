@@ -1,10 +1,7 @@
 package com.gavinflood.fpl.api.mapper
 
 import com.gavinflood.fpl.api.domain.*
-import com.gavinflood.fpl.api.http.response.GeneralResponseEvent
-import com.gavinflood.fpl.api.http.response.GeneralResponseEventChipPlay
-import com.gavinflood.fpl.api.http.response.GeneralResponsePlayer
-import com.gavinflood.fpl.api.http.response.GeneralResponseTeam
+import com.gavinflood.fpl.api.http.response.*
 
 /**
  * Maps data in DTOs returned from the official API to custom, more refined domain objects.
@@ -19,15 +16,16 @@ class Mapper {
         eventDTO.name,
         eventDTO.average_entry_score,
         eventDTO.is_current,
-        eventDTO.chip_plays.map { mapChipPlay(it) },
+        eventDTO.chip_plays.map { mapChipPlayTotal(it) },
         eventDTO.transfers_made,
         eventDTO.deadline_time
     )
 
     /**
-     * Maps the data in [chipPlayDTO] to a [ChipPlay] object.
+     * Maps the data in [chipPlayDTO] to a [ChipPlayTotal] object.
      */
-    fun mapChipPlay(chipPlayDTO: GeneralResponseEventChipPlay) = ChipPlay(chipPlayDTO.chip_name, chipPlayDTO.num_played)
+    fun mapChipPlayTotal(chipPlayDTO: GeneralResponseEventChipPlay) =
+        ChipPlayTotal(chipPlayDTO.chip_name, chipPlayDTO.num_played)
 
     /**
      * Maps the data in [teamDTO] to a [Team] object.
@@ -58,7 +56,7 @@ class Mapper {
         playerDTO.first_name,
         playerDTO.second_name,
         team,
-        Position.valueOf(playerDTO.element_type),
+        Position.getEnumById(playerDTO.element_type),
         playerDTO.dreamteam_count,
         playerDTO.in_dreamteam,
         playerDTO.now_cost.toDouble().div(10),
@@ -66,4 +64,53 @@ class Mapper {
         playerDTO.transfers_in,
         playerDTO.transfers_out
     )
+
+    /**
+     * Maps the data in [fixtureDTO] to a [Fixture] object. Requires [getGameWeek], [getTeam], and [getPlayer]
+     * lambdas to get the relevant objects by their id.
+     */
+    fun mapFixture(
+        fixtureDTO: FixturesResponseDetail,
+        getGameWeek: (id: Int) -> GameWeek,
+        getTeam: (id: Int) -> Team,
+        getPlayer: (id: Int) -> Player
+    ) = mapFixture(
+        fixtureDTO,
+        getGameWeek(fixtureDTO.event),
+        getTeam(fixtureDTO.team_h),
+        getTeam(fixtureDTO.team_a),
+        getPlayer
+    )
+
+    /**
+     * Maps the data in [fixtureDTO] to a [Fixture]
+     */
+    fun mapFixture(
+        fixtureDTO: FixturesResponseDetail,
+        gameWeek: GameWeek,
+        homeTeam: Team,
+        awayTeam: Team,
+        getPlayer: (id: Int) -> Player
+    ) = Fixture(
+        fixtureDTO.id,
+        gameWeek,
+        fixtureDTO.kickoff_time,
+        homeTeam,
+        awayTeam,
+        fixtureDTO.stats.flatMap { mapStats(it, getPlayer) }
+    )
+
+    /**
+     * Maps the data in [statsDTO] to a list of [Stat] objects.
+     */
+    fun mapStats(statsDTO: FixturesResponseStats, getPlayer: (id: Int) -> Player) =
+        mutableListOf(statsDTO.a, statsDTO.h)
+            .flatten()
+            .map { mapStat(it, StatType.getEnumByCode(statsDTO.identifier), getPlayer) }
+
+    /**
+     * Maps the data in [statDTO] to a [Stat] object. Requires a [getPlayer] lambda that takes an [Int] argument.
+     */
+    fun mapStat(statDTO: FixturesResponseStat, type: StatType, getPlayer: (id: Int) -> Player) =
+        Stat(type, getPlayer(statDTO.element), statDTO.value)
 }
