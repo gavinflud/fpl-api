@@ -1,6 +1,6 @@
 package com.gavinflood.fpl.api.handlers
 
-import com.gavinflood.fpl.api.API
+import com.gavinflood.fpl.api.FantasyAPI
 import com.gavinflood.fpl.api.domain.GameWeek
 import java.time.LocalDateTime
 
@@ -13,7 +13,7 @@ class GameWeekHandler : Handler() {
      * Get all game-weeks for the season.
      */
     fun get(): List<GameWeek> {
-        val generalInfo = API.getGeneralInfo()
+        val generalInfo = FantasyAPI.getGeneralInfo()
 
         val findTeamById = { id: Int ->
             generalInfo.teams

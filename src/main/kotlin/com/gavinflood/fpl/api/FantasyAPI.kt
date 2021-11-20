@@ -14,7 +14,7 @@ import com.gavinflood.fpl.api.properties.FplProperties
  * This is the primary entry-point to get Fantasy Football data. It handles the calls to the official Fantasy Football
  * API and parses the responses, returning the necessary data in more refined objects.
  */
-object API {
+object FantasyAPI {
 
     private const val generalInfoCacheKey = "GENERAL_INFO"
     private const val fixturesCacheKey = "FIXTURES"

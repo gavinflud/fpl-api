@@ -1,6 +1,6 @@
 package com.gavinflood.fpl.api.handlers
 
-import com.gavinflood.fpl.api.API
+import com.gavinflood.fpl.api.FantasyAPI
 import com.gavinflood.fpl.api.domain.Player
 import com.gavinflood.fpl.api.domain.Position
 import com.gavinflood.fpl.api.domain.StatType
@@ -14,7 +14,7 @@ class PlayerHandler : Handler() {
      * Get all players in the league.
      */
     fun get(): List<Player> {
-        val generalInfo = API.getGeneralInfo()
+        val generalInfo = FantasyAPI.getGeneralInfo()
         val findTeamById = { id: Int ->
             generalInfo.teams
                 .map { teamDTO -> mapper.mapTeam(teamDTO) }
@@ -38,7 +38,7 @@ class PlayerHandler : Handler() {
      * Get all players in a team given its [id].
      */
     fun getByTeam(id: Int): List<Player> {
-        val generalInfo = API.getGeneralInfo()
+        val generalInfo = FantasyAPI.getGeneralInfo()
         val team = mapper.mapTeam(generalInfo.teams.first { it.id == id })
         return generalInfo.elements
             .filter { playerDTO -> playerDTO.team == id }
@@ -99,7 +99,7 @@ class PlayerHandler : Handler() {
     private fun getTotalStatValuesPerPlayer(statType: StatType): Map<Int, Int> {
         val totalsPerPlayer = mutableMapOf<Int, Int>()
 
-        val fixtures = API.fixtures.get()
+        val fixtures = FantasyAPI.fixtures.get()
         fixtures
             .flatMap { fixture -> fixture.stats }
             .forEach { stat ->

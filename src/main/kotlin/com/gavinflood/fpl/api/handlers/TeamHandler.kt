@@ -1,6 +1,6 @@
 package com.gavinflood.fpl.api.handlers
 
-import com.gavinflood.fpl.api.API
+import com.gavinflood.fpl.api.FantasyAPI
 import com.gavinflood.fpl.api.domain.Team
 
 /**
@@ -11,11 +11,11 @@ class TeamHandler : Handler() {
     /**
      * Get all teams in the league.
      */
-    fun get(): List<Team> = API.getGeneralInfo().teams.map { mapper.mapTeam(it) }
+    fun get(): List<Team> = FantasyAPI.getGeneralInfo().teams.map { mapper.mapTeam(it) }
 
     /**
      * Get a single team given its [id].
      */
-    fun get(id: Int): Team = mapper.mapTeam(API.getGeneralInfo().teams.first { it.id == id })
+    fun get(id: Int): Team = mapper.mapTeam(FantasyAPI.getGeneralInfo().teams.first { it.id == id })
 
 }

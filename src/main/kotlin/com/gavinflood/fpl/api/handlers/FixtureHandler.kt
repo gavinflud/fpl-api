@@ -1,6 +1,6 @@
 package com.gavinflood.fpl.api.handlers
 
-import com.gavinflood.fpl.api.API
+import com.gavinflood.fpl.api.FantasyAPI
 import com.gavinflood.fpl.api.domain.Fixture
 
 /**
@@ -12,7 +12,7 @@ class FixtureHandler : Handler() {
      * Get all fixtures for the season.
      */
     fun get(): List<Fixture> {
-        val generalInfo = API.getGeneralInfo()
+        val generalInfo = FantasyAPI.getGeneralInfo()
 
         val findTeamById = { id: Int ->
             generalInfo.teams
@@ -32,7 +32,7 @@ class FixtureHandler : Handler() {
                 .first { gameWeek -> gameWeek.id == id }
         }
 
-        return API.getFixtures().map { fixtureDTO ->
+        return FantasyAPI.getFixtures().map { fixtureDTO ->
             mapper.mapFixture(fixtureDTO, findGameWeekById, findTeamById, findPlayerById)
         }
     }
