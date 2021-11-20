@@ -70,6 +70,29 @@ class PlayerHandler : Handler() {
         getPlayersWithLowestStatValue(getTotalStatValuesPerPlayer(statType)) { player -> player.position == position }
 
     /**
+     * Get the best value players. Results limited to top [numberToGet].
+     */
+    fun getBestValuePlayers(numberToGet: Int): List<Player> = getBestValuePlayers(numberToGet) { true }
+
+    /**
+     * Get the best value players in a specific [position]. Results limited to top [numberToGet].
+     */
+    fun getBestValuePlayersByPosition(numberToGet: Int, position: Position) =
+        getBestValuePlayers(numberToGet) { player -> player.position == position }
+
+    /**
+     * Get the best value players. Results limited to top [numberToGet] and can be filtered by passing a [condition].
+     * The best value is defined as having the highest total points when divided by the player's current cost.
+     */
+    private fun getBestValuePlayers(numberToGet: Int, condition: (player: Player) -> Boolean): List<Player> {
+        val players = get().filter(condition).toMutableList()
+        players.sortByDescending { player ->
+            player.totalPoints.toFloat().div(player.currentCost)
+        }
+        return players.subList(0, numberToGet)
+    }
+
+    /**
      * Sum up the total values for a specific [statType] for each player. Returns a map with the player ID as the key
      * and the total as the value.
      */
@@ -157,5 +180,6 @@ class PlayerHandler : Handler() {
             playersNotInTotals.values.associateWith { 0 }
         else playersWithLowestTotal
     }
+
 
 }

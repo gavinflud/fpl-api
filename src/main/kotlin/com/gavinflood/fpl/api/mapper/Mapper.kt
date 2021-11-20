@@ -11,14 +11,17 @@ class Mapper {
     /**
      * Maps the data in [eventDTO] to a [GameWeek] object.
      */
-    fun mapGameWeek(eventDTO: GeneralResponseEvent) = GameWeek(
+    fun mapGameWeek(eventDTO: GeneralResponseEvent, getPlayer: (id: Int) -> Player?) = GameWeek(
         eventDTO.id,
         eventDTO.name,
         eventDTO.average_entry_score,
+        eventDTO.highest_score,
         eventDTO.is_current,
         eventDTO.chip_plays.map { mapChipPlayTotal(it) },
         eventDTO.transfers_made,
-        eventDTO.deadline_time
+        eventDTO.deadline_time,
+        getPlayer(eventDTO.most_captained),
+        getPlayer(eventDTO.most_vice_captained)
     )
 
     /**
@@ -61,6 +64,8 @@ class Mapper {
         playerDTO.in_dreamteam,
         playerDTO.now_cost.toDouble().div(10),
         playerDTO.selected_by_percent,
+        playerDTO.total_points,
+        playerDTO.minutes,
         playerDTO.transfers_in,
         playerDTO.transfers_out
     )

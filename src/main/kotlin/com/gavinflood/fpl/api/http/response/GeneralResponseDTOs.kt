@@ -27,8 +27,8 @@ data class GeneralResponseEvent(
     val most_transferred_in: Long,
     val top_element: Long,
     val transfers_made: Int,
-    val most_captained: Long,
-    val most_vice_captained: Long
+    val most_captained: Int,
+    val most_vice_captained: Int
 )
 
 data class GeneralResponseEventChipPlay(

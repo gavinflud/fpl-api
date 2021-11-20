@@ -16,6 +16,8 @@ class Player(
     val inDreamTeam: Boolean,
     val currentCost: Double,
     val selectedByPercentage: Double,
+    val totalPoints: Int,
+    val totalMinutes: Int,
     val transfersIn: Int,
     val transfersOut: Int
 )

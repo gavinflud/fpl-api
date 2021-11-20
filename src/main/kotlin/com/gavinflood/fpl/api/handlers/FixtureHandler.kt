@@ -20,16 +20,16 @@ class FixtureHandler : Handler() {
                 .first { team -> team.id == id }
         }
 
-        val findGameWeekById = { id: Int ->
-            generalInfo.events
-                .map { gameWeekDTO -> mapper.mapGameWeek(gameWeekDTO) }
-                .first { gameWeek -> gameWeek.id == id }
-        }
-
         val findPlayerById = { id: Int ->
             generalInfo.elements
                 .map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById(playerDTO.team)) }
                 .first { player -> player.id == id }
+        }
+
+        val findGameWeekById = { id: Int ->
+            generalInfo.events
+                .map { gameWeekDTO -> mapper.mapGameWeek(gameWeekDTO, findPlayerById) }
+                .first { gameWeek -> gameWeek.id == id }
         }
 
         return API.getFixtures().map { fixtureDTO ->
