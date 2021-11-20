@@ -77,6 +77,12 @@ class FplProperties {
     fun getUserAgentHeader(): String = properties.getProperty("http.headers.user-agent")
 
     /**
+     * The number of seconds that data will live in the cache for before it is cleared and fresh requests are made to
+     * the server.
+     */
+    fun getCacheFlushIntervalInMillis(): Long = properties.getProperty("cache.flush-interval").toLong()
+
+    /**
      * Appends [url] to the base fantasy football API url.
      */
     private fun combineWithBaseUrl(url: String) = properties.getProperty("http.base") + url
