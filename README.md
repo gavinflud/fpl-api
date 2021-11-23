@@ -162,6 +162,13 @@ specific position (points / cost)*
 FantasyAPI.players.getBestValuePlayersByPosition(10, Position.DEFENDER)
 ```
 
+`getBestPossibleTeamBasedOnCurrentSeason()` *Returns the best possible team you could feasibly build based on total
+points so far this season. This uses linear programming to determine the players that are selected*
+
+```kotlin
+FantasyAPI.players.getBestPossibleTeamBasedOnCurrentSeason()
+```
+
 ### Fixtures
 
 `get()` *Returns all fixtures*

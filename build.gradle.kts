@@ -21,6 +21,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0")
     implementation("com.squareup.okhttp3:mockwebserver:4.9.2")
+    implementation("org.ojalgo:ojalgo:49.2.1")
 }
 
 tasks.test {
