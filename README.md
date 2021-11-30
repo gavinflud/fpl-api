@@ -4,7 +4,12 @@ A Kotlin wrapper around the Fantasy Premier League API.
 
 ## Installing
 
-TODO
+You can access the API wrapper in one of two ways:
+
+1. StableDownload the latest release from the [releases](https://github.com/gavinflud/fpl-api/releases) page.
+2. Clone the repository, and once cloned run `gradle jar` inside the project directory.
+
+Doing either of these should provide you with a JAR file that you can include in your project.
 
 ## Usage
 
