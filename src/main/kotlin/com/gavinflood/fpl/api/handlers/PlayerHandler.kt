@@ -86,7 +86,7 @@ class PlayerHandler : Handler() {
      */
     fun getBestPossibleTeamBasedOnCurrentSeason(): List<Player> {
         val modelBuilder = PlayerModelBuilder()
-        modelBuilder.initializePlayerVariablesWithTotalPointsWeight()
+        modelBuilder.initializeAllPlayerVariables()
         modelBuilder.addMaxBudgetConstraint()
         modelBuilder.addMaxPlayersPerTeamConstraint()
         modelBuilder.addMaxPlayersPerPositionConstraint()

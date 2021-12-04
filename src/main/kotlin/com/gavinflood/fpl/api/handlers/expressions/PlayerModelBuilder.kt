@@ -19,6 +19,7 @@ class PlayerModelBuilder {
     private val maxPlayersPerPositionConstraintName = "max_for_position_"
     private val lowValuePlayersConstraintName = "low_cost_players"
     private val minimumCurrentPlayersConstraintName = "current_players_constraint"
+    private val minAndMaxPlayersPerPositionConstraintName = "min_max_for_position_"
 
     private val model = ExpressionsBasedModel()
     private val playersByVariableName = FantasyAPI.players.get().associateBy { player -> "player_${player.id}" }
@@ -34,25 +35,21 @@ class PlayerModelBuilder {
      * This means the aim is to find the players with the highest weight while conforming to the constraints added to
      * the expression.
      */
-    fun initializePlayerVariablesWithTotalPointsWeight() {
-        val gameWeekIds = FantasyAPI.gameWeeks.getNextGameWeeks(3).map { it.id }
-        val upcomingFixtures = FantasyAPI.fixtures.get()
-            .filter { fixture -> fixture.gameWeek != null && gameWeekIds.contains(fixture.gameWeek.id) }
-        val upcomingFixturesDifficultyByTeam = FantasyAPI.teams.get()
-            .associateWith { team -> upcomingFixtures.sumOf { calculateFixtureDifficulty(team, it) } }
-            .mapKeys { it.key.id }
+    fun initializeAllPlayerVariables() {
+        addPlayerVariablesToModel(playersByVariableName)
+    }
 
-        model.addVariables(playersByVariableName.map { (variableName, player) ->
-            val upcomingFixturesDifficulty = upcomingFixturesDifficultyByTeam[player.team.id] ?: 5
+    /**
+     * Initializes a variable for each player in [players].
+     *
+     * @see initializeAllPlayerVariables
+     */
+    fun initializeSpecifiedPlayerVariables(players: List<Player>) {
+        val eligiblePlayersByVariableName = playersByVariableName.filterValues { player ->
+            players.any { eligiblePlayer -> eligiblePlayer.id == player.id }
+        }
 
-            // 16 is used here as the max difficulty for three fixtures is 15, so need to avoid multiplying by zero
-            val weight = player.totalPoints * player.form * (16 - upcomingFixturesDifficulty)
-            Variable.make(variableName)
-                .lower(0)
-                .upper(1)
-                .weight(weight)
-                .integer(true)
-        })
+        addPlayerVariablesToModel(eligiblePlayersByVariableName)
     }
 
     /**
@@ -132,6 +129,28 @@ class PlayerModelBuilder {
     }
 
     /**
+     * There is a min and max number of players needed in each position when picking a team. There may only be:
+     *   - 1 goalkeeper
+     *   - minimum of 3 and maximum of 5 defenders
+     *   - minimum of 3 and maximum of 5 midfielder
+     *   - minimum of 1 and maximum of 3 forwards
+     */
+    fun addMinAndMaxPlayersPerPositionConstraint() {
+        mapOf(
+            Position.GOALKEEPER.name to 1..1,
+            Position.DEFENDER.name to 3..5,
+            Position.MIDFIELDER.name to 3..5,
+            Position.FORWARD.name to 1..3
+        ).forEach { (name, range) ->
+            val constraint = model.addExpression("$minAndMaxPlayersPerPositionConstraintName${name.lowercase()}")
+                .lower(range.first)
+                .upper(range.last)
+            model.variables.filter { playersByVariableName.getValue(it.name).position.name == name }
+                .forEach { constraint.set(it, 1) }
+        }
+    }
+
+    /**
      * Selecting the top [numToSelect] players after running maximize() or minimize().
      */
     fun getSelectedPlayersAfterOptimization(numToSelect: Int): List<Player> {
@@ -141,6 +160,38 @@ class PlayerModelBuilder {
             .apply { this.sortByDescending { it.value } }
             .subList(0, numToSelect)
             .map { playersByVariableName.getValue(it.name) }
+    }
+
+    /**
+     * Calculate the total difficulty of the upcoming 3 fixtures for each team. Returns a map with the team associated
+     * with their fixture difficulty score.
+     */
+    private fun calculateUpcomingFixtureDifficultyPerTeam(): Map<Int, Int> {
+        val gameWeekIds = FantasyAPI.gameWeeks.getNextGameWeeks(3).map { it.id }
+        val upcomingFixtures = FantasyAPI.fixtures.get()
+            .filter { fixture -> fixture.gameWeek != null && gameWeekIds.contains(fixture.gameWeek.id) }
+        return FantasyAPI.teams.get()
+            .associateWith { team -> upcomingFixtures.sumOf { calculateFixtureDifficulty(team, it) } }
+            .mapKeys { it.key.id }
+    }
+
+    /**
+     * Adds a new variable to the model for each player in [playersByVariableName].
+     */
+    private fun addPlayerVariablesToModel(playersToAddByVariableName: Map<String, Player>) {
+        val upcomingFixturesDifficultyByTeam = calculateUpcomingFixtureDifficultyPerTeam()
+
+        model.addVariables(playersToAddByVariableName.map { (variableName, player) ->
+            val upcomingFixturesDifficulty = upcomingFixturesDifficultyByTeam[player.team.id] ?: 5
+
+            // 16 is used here as the max difficulty for three fixtures is 15, so need to avoid multiplying by zero
+            val weight = player.totalPoints * player.form * (16 - upcomingFixturesDifficulty)
+            Variable.make(variableName)
+                .lower(0)
+                .upper(1)
+                .weight(weight)
+                .integer(true)
+        })
     }
 
     /**

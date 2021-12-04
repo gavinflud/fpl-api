@@ -27,7 +27,7 @@ class ManagerHandler : Handler() {
     fun getRecommendedTransfersForNextGameWeek(managerId: Long, numFreeTransfers: Int): Map<Player, Player> {
         val currentPlayers = getPlayersForCurrentGameWeek(managerId)
         val modelBuilder = PlayerModelBuilder()
-        modelBuilder.initializePlayerVariablesWithTotalPointsWeight()
+        modelBuilder.initializeAllPlayerVariables()
         modelBuilder.addMaxBudgetConstraint()
         modelBuilder.addMaxPlayersPerTeamConstraint()
         modelBuilder.addMaxPlayersPerPositionConstraint()
@@ -45,6 +45,22 @@ class ManagerHandler : Handler() {
         return transferMap
     }
 
-    private fun getCurrentGameWeekId() = FantasyAPI.gameWeeks.get().first { it.isCurrent }.id
+    /**
+     * Determine the recommended starting XI for the next game week based on the players in the manager's (identified by
+     * [managerId]) squad.
+     */
+    fun getRecommendedStartingTeamForNextGameWeek(managerId: Long): List<Player> {
+        val currentPlayers = getPlayersForCurrentGameWeek(managerId)
+        val modelBuilder = PlayerModelBuilder()
+        modelBuilder.initializeSpecifiedPlayerVariables(currentPlayers)
+        modelBuilder.addMinAndMaxPlayersPerPositionConstraint()
+        modelBuilder.build().maximise()
+        return modelBuilder.getSelectedPlayersAfterOptimization(11)
+    }
+
+    /**
+     * Get the ID of the current game week.
+     */
+    private fun getCurrentGameWeekId() = FantasyAPI.gameWeeks.getCurrentGameWeek().id
 
 }
