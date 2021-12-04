@@ -23,13 +23,13 @@ class FixtureHandler : Handler() {
         val findPlayerById = { id: Int ->
             generalInfo.elements
                 .map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById(playerDTO.team)) }
-                .first { player -> player.id == id }
+                .find { player -> player.id == id }
         }
 
         val findGameWeekById = { id: Int ->
             generalInfo.events
                 .map { gameWeekDTO -> mapper.mapGameWeek(gameWeekDTO, findPlayerById) }
-                .first { gameWeek -> gameWeek.id == id }
+                .find { gameWeek -> gameWeek.id == id }
         }
 
         return FantasyAPI.getFixtures().map { fixtureDTO ->

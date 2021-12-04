@@ -4,9 +4,7 @@ import com.gavinflood.fpl.api.FantasyAPI
 import com.gavinflood.fpl.api.domain.Player
 import com.gavinflood.fpl.api.domain.Position
 import com.gavinflood.fpl.api.domain.StatType
-import org.ojalgo.optimisation.ExpressionsBasedModel
-import org.ojalgo.optimisation.Variable
-import java.math.BigDecimal
+import com.gavinflood.fpl.api.handlers.expressions.PlayerModelBuilder
 
 /**
  * Exposes functions that can be called to access data related to players.
@@ -87,64 +85,14 @@ class PlayerHandler : Handler() {
      * Get the best possible current squad based on total points so far this season.
      */
     fun getBestPossibleTeamBasedOnCurrentSeason(): List<Player> {
-        val playersByVariableName = get().associateBy { player -> "player_${player.id}" }
-
-        // Players are the variables, and they are weighted by their total points to date
-        val variables = playersByVariableName.map { (variableName, player) ->
-            Variable.make(variableName).lower(0).upper(1).weight(player.totalPoints).integer(true)
-        }
-
-        val model = ExpressionsBasedModel()
-        model.addVariables(variables)
-
-        // Total cost of players must be less than 1000 (£100m with one decimal place)
-        val maxBudgetConstraint = model.addExpression("max_budget").lower(0).upper(1000)
-        variables.forEach { variable ->
-            maxBudgetConstraint.set(
-                variable,
-                playersByVariableName.getValue(variable.name).currentCost.times(10).toInt()
-            )
-        }
-
-        // Maximum of three players from any one team
-        FantasyAPI.teams.get().forEach { team ->
-            val constraint = model.addExpression("max_for_team_${team.id}").lower(0).upper(3)
-            variables.filter { playersByVariableName.getValue(it.name).team.id == team.id }
-                .forEach { constraint.set(it, 1) }
-        }
-
-        // Must have 2 goalkeepers, 5 defenders, 5 midfielders, and 3 forwards
-        mapOf(
-            Position.GOALKEEPER.name to 2,
-            Position.DEFENDER.name to 5,
-            Position.MIDFIELDER.name to 5,
-            Position.FORWARD.name to 3
-        ).forEach { (name, max) ->
-            val constraint = model.addExpression("max_for_pos_${name.lowercase()}").lower(max).upper(max)
-            variables.filter { playersByVariableName.getValue(it.name).position.name == name }
-                .forEach { constraint.set(it, 1) }
-        }
-
-        // Aim for two low-cost players to avoid having an expensive sub keeper or third sub
-        val lowCostPlayersConstraint = model.addExpression("low_cost_players").lower(2)
-        variables.forEach { variable ->
-            val player = playersByVariableName.getValue(variable.name)
-            if (listOf(Position.GOALKEEPER.name, Position.DEFENDER.name).contains(player.position.name)
-                && player.currentCost.times(10).toInt() < 45
-            ) {
-                lowCostPlayersConstraint.set(variable, 1)
-            }
-        }
-
-        val result = model.maximise()
-
-        // Selecting the top 15 variables with the highest value as there are instances where more than 15 are selected
-        val selectedVariables = model.variables
-            .filter { it.value.compareTo(BigDecimal.ZERO) == 1 }
-            .toMutableList()
-            .apply { this.sortByDescending { it.value } }
-            .subList(0, 15)
-        return selectedVariables.map { playersByVariableName.getValue(it.name) }
+        val modelBuilder = PlayerModelBuilder()
+        modelBuilder.initializePlayerVariablesWithTotalPointsWeight()
+        modelBuilder.addMaxBudgetConstraint()
+        modelBuilder.addMaxPlayersPerTeamConstraint()
+        modelBuilder.addMaxPlayersPerPositionConstraint()
+        modelBuilder.addLowValueDefenderAndGoalkeeperConstraint()
+        modelBuilder.build().maximise()
+        return modelBuilder.getSelectedPlayersAfterOptimization(15)
     }
 
     /**

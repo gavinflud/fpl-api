@@ -10,16 +10,18 @@ import java.time.LocalDateTime
 @Serializable
 class Fixture(
     val id: Int,
-    val gameWeek: GameWeek,
+    val gameWeek: GameWeek?,
 
     @Serializable(with = LocalDateTimeSerializer::class)
-    val kickoff: LocalDateTime,
+    val kickoff: LocalDateTime?,
 
     val homeTeam: Team,
     val awayTeam: Team,
+    val homeTeamDifficulty: Int,
+    val awayTeamDifficulty: Int,
     val stats: List<Stat>,
 ) {
 
-    fun isFinished(): Boolean = kickoff.isBefore(LocalDateTime.now().minusHours(3))
+    fun isFinished(): Boolean = kickoff!!.isBefore(LocalDateTime.now().minusHours(3))
 
 }

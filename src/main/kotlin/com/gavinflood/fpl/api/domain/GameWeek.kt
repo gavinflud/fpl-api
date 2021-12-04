@@ -14,6 +14,7 @@ class GameWeek(
     val averageScore: Int,
     val highestScore: Int,
     val isCurrent: Boolean,
+    val isNext: Boolean,
     val chipPlays: List<ChipPlayTotal>,
     val numTransfersMade: Int,
 

@@ -2,6 +2,7 @@
 
 A Kotlin wrapper around the Fantasy Premier League API.
 
+
 ## Installing
 
 You can access the API wrapper in one of two ways:
@@ -10,6 +11,7 @@ You can access the API wrapper in one of two ways:
 2. Clone the repository, and once cloned run `gradle jar` inside the project directory.
 
 Doing either of these should provide you with a JAR file that you can include in your project.
+
 
 ## Usage
 
@@ -88,6 +90,24 @@ FantasyAPI.gameWeeks.get()
 
 ```kotlin
 FantasyAPI.gameWeeks.get(12)
+```
+
+`getCurrentGameWeek()` *Returns the current game week.*
+
+```kotlin
+FantasyAPI.gameWeeks.getCurrentGameWeek()
+```
+
+`getNextGameWeek()` *Returns the next game week.*
+
+```kotlin
+FantasyAPI.gameWeeks.getNextGameWeek()
+```
+
+`getNextGameWeeks(numberOfGameWeeks: Int)` *Returns the specified number of game weeks after the current one.*
+
+```kotlin
+FantasyAPI.gameWeeks.getNextGameWeeks(3)
 ```
 
 `getWeekWithHighestScoreToDate()` *Returns the game week with the highest score so far.*
@@ -192,6 +212,22 @@ FantasyAPI.fixtures.get(190)
 
 ```kotlin
 FantasyAPI.fixtures.getByTeam(8)
+```
+
+### Managers
+
+`getPlayersForCurrentGameWeek(managerId: Long)` *Returns a list of players in the specified manager's squad for the
+current game week.*
+
+```kotlin
+FantasyAPI.managers.getPlayersForCurrentGameWeek(3573238)
+```
+
+`getRecommendedTransfersForNextGameWeek(managerId: Long, numFreeTransfers: Int)` *Returns a map containing the
+recommended players that should be sold (key) and replaced with (value) for the next game week.*
+
+```kotlin
+FantasyAPI.managers.getRecommendedTransfersForNextGameWeek(3573238, 2)
 ```
 
 ## Contributing

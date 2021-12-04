@@ -10,7 +10,7 @@ data class FixturesResponseDetail(
     val finished: Boolean,
     val finished_provisional: Boolean,
     val id: Int,
-    val kickoff_time: LocalDateTime,
+    val kickoff_time: LocalDateTime?,
     val minutes: Int,
     val provisional_start_time: Boolean,
     val started: Boolean,

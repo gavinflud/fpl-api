@@ -36,6 +36,23 @@ class GameWeekHandler : Handler() {
     fun get(id: Int): GameWeek = get().first { gameWeek -> gameWeek.id == id }
 
     /**
+     * Gets the current game week.
+     */
+    fun getCurrentGameWeek() = get().first { gameWeek -> gameWeek.isCurrent }
+
+    /**
+     * Gets the next game week.
+     */
+    fun getNextGameWeek() = get().first { gameWeek -> gameWeek.isNext }
+
+    fun getNextGameWeeks(numberOfGameWeeks: Int): List<GameWeek> {
+        val currentGameWeek = getCurrentGameWeek()
+        return get().filter { gameWeek ->
+            gameWeek.id > currentGameWeek.id && gameWeek.id <= currentGameWeek.id.plus(numberOfGameWeeks)
+        }
+    }
+
+    /**
      * Get the game week with the highest score so far.
      */
     fun getWeekWithHighestScoreToDate(): GameWeek {

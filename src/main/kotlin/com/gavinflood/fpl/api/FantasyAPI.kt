@@ -1,13 +1,11 @@
 package com.gavinflood.fpl.api
 
 import com.gavinflood.fpl.api.cache.ExpirableCache
-import com.gavinflood.fpl.api.handlers.FixtureHandler
-import com.gavinflood.fpl.api.handlers.GameWeekHandler
-import com.gavinflood.fpl.api.handlers.PlayerHandler
-import com.gavinflood.fpl.api.handlers.TeamHandler
+import com.gavinflood.fpl.api.handlers.*
 import com.gavinflood.fpl.api.http.Client
 import com.gavinflood.fpl.api.http.response.FixturesResponse
 import com.gavinflood.fpl.api.http.response.GeneralResponse
+import com.gavinflood.fpl.api.http.response.ManagerPicksResponse
 import com.gavinflood.fpl.api.properties.FplProperties
 
 /**
@@ -18,6 +16,7 @@ object FantasyAPI {
 
     private const val generalInfoCacheKey = "GENERAL_INFO"
     private const val fixturesCacheKey = "FIXTURES"
+    private const val managerPicksCacheKey = "MANAGER_PICKS:"
 
     private val properties = FplProperties()
     private val client = Client()
@@ -27,6 +26,7 @@ object FantasyAPI {
     val gameWeeks = GameWeekHandler()
     val players = PlayerHandler()
     val fixtures = FixtureHandler()
+    val managers = ManagerHandler()
 
     /**
      * Get bootstrap data.
@@ -37,6 +37,12 @@ object FantasyAPI {
      * Get fixture data.
      */
     internal fun getFixtures(): FixturesResponse = getFromCache(fixturesCacheKey) { client.getFixtures() }
+
+    /**
+     * Get manager picks data for a specific [gameWeekNum].
+     */
+    internal fun getManagerPicks(managerId: Long, gameWeekNum: Int): ManagerPicksResponse =
+        getFromCache("$managerPicksCacheKey$managerId") { client.getManagerPicks(managerId, gameWeekNum) }
 
     /**
      * Check if a value exists in the cache and if so return it. If it doesn't or if the cache has expired, use the

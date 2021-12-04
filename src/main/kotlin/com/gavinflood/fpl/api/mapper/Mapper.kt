@@ -17,6 +17,7 @@ class Mapper {
         eventDTO.average_entry_score,
         eventDTO.highest_score,
         eventDTO.is_current,
+        eventDTO.is_next,
         eventDTO.chip_plays.map { mapChipPlayTotal(it) },
         eventDTO.transfers_made,
         eventDTO.deadline_time,
@@ -63,6 +64,7 @@ class Mapper {
         playerDTO.dreamteam_count,
         playerDTO.in_dreamteam,
         playerDTO.now_cost.toDouble().div(10),
+        playerDTO.form.toDouble(),
         playerDTO.selected_by_percent,
         playerDTO.total_points,
         playerDTO.minutes,
@@ -76,9 +78,9 @@ class Mapper {
      */
     fun mapFixture(
         fixtureDTO: FixturesResponseDetail,
-        getGameWeek: (id: Int) -> GameWeek,
+        getGameWeek: (id: Int) -> GameWeek?,
         getTeam: (id: Int) -> Team,
-        getPlayer: (id: Int) -> Player
+        getPlayer: (id: Int) -> Player?
     ) = mapFixture(
         fixtureDTO,
         getGameWeek(fixtureDTO.event),
@@ -92,23 +94,25 @@ class Mapper {
      */
     fun mapFixture(
         fixtureDTO: FixturesResponseDetail,
-        gameWeek: GameWeek,
+        gameWeek: GameWeek?,
         homeTeam: Team,
         awayTeam: Team,
-        getPlayer: (id: Int) -> Player
+        getPlayer: (id: Int) -> Player?
     ) = Fixture(
         fixtureDTO.id,
         gameWeek,
         fixtureDTO.kickoff_time,
         homeTeam,
         awayTeam,
+        fixtureDTO.team_h_difficulty,
+        fixtureDTO.team_a_difficulty,
         fixtureDTO.stats.flatMap { mapStats(it, getPlayer) }
     )
 
     /**
      * Maps the data in [statsDTO] to a list of [Stat] objects.
      */
-    fun mapStats(statsDTO: FixturesResponseStats, getPlayer: (id: Int) -> Player) =
+    fun mapStats(statsDTO: FixturesResponseStats, getPlayer: (id: Int) -> Player?) =
         mutableListOf(statsDTO.a, statsDTO.h)
             .flatten()
             .map { mapStat(it, StatType.getEnumByCode(statsDTO.identifier), getPlayer) }
@@ -116,6 +120,29 @@ class Mapper {
     /**
      * Maps the data in [statDTO] to a [Stat] object. Requires a [getPlayer] lambda that takes an [Int] argument.
      */
-    fun mapStat(statDTO: FixturesResponseStat, type: StatType, getPlayer: (id: Int) -> Player) =
-        Stat(type, getPlayer(statDTO.element), statDTO.value)
+    fun mapStat(statDTO: FixturesResponseStat, type: StatType, getPlayer: (id: Int) -> Player?): Stat {
+        return Stat(type, getPlayer(statDTO.element)!!, statDTO.value)
+    }
+
+    /**
+     * Maps the data in [managerPicksDTO] to a [ManagerTeam] object. Requires a [getPlayer] lambda that takes an [Int]
+     * argument.
+     */
+    fun mapManagerTeam(
+        managerPicksDTO: ManagerPicksResponse,
+        getPlayer: (id: Int) -> Player
+    ) = ManagerTeam(
+        managerPicksDTO.picks.map { mapManagerPlayer(it, getPlayer) }
+    )
+
+    /**
+     * Maps the data in a single [managerPickDTO] to a [ManagerPlayer] object. Requires a [getPlayer] lambda that takes
+     * an [Int] argument.
+     */
+    fun mapManagerPlayer(managerPickDTO: ManagerPicksResponsePick, getPlayer: (id: Int) -> Player) = ManagerPlayer(
+        getPlayer(managerPickDTO.element),
+        managerPickDTO.position,
+        managerPickDTO.is_captain,
+        managerPickDTO.is_vice_captain
+    )
 }

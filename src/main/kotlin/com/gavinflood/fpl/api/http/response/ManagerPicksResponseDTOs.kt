@@ -1,7 +1,7 @@
 package com.gavinflood.fpl.api.http.response
 
 data class ManagerPicksResponse(
-    // TODO: val active_chip:
+    //val active_chip: String,
     val automatic_subs: List<ManagerPicksResponseAutomaticSub>,
     val entry_history: ManagerPicksResponseHistory,
     val picks: List<ManagerPicksResponsePick>
@@ -29,7 +29,7 @@ data class ManagerPicksResponseHistory(
 )
 
 data class ManagerPicksResponsePick(
-    val element: Long,
+    val element: Int,
     val position: Int,
     val multiplier: Int,
     val is_captain: Boolean,
