@@ -3,15 +3,18 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.5.10"
     kotlin("plugin.serialization") version "1.5.21"
+    id("org.jetbrains.dokka") version "1.6.0"
+    `maven-publish`
 }
 
 group = "com.gavinflood.fpl.api"
-version = "0.3.0"
+version = "1.0.0"
 
 var junitVersion = "5.8.1"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -20,7 +23,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0")
-    implementation("com.squareup.okhttp3:mockwebserver:4.9.2")
+    implementation("com.squareup.okhttp3:mockwebserver:4.9.3")
     implementation("org.ojalgo:ojalgo:49.2.1")
 }
 
@@ -30,4 +33,16 @@ tasks.test {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("fpl-api") {
+            groupId = group.toString()
+            artifactId = "fpl-api"
+            version = version
+
+            from(components["java"])
+        }
+    }
 }

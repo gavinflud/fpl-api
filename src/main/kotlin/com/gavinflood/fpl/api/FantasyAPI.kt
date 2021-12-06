@@ -19,8 +19,7 @@ object FantasyAPI {
     private const val managerPicksCacheKey = "MANAGER_PICKS:"
 
     private val properties = FplProperties()
-    private val client = Client()
-    private val cache = ExpirableCache(properties.getCacheFlushIntervalInMillis())
+    private var cache = ExpirableCache(properties.getCacheFlushIntervalInMillis())
 
     val teams = TeamHandler()
     val gameWeeks = GameWeekHandler()
@@ -29,20 +28,37 @@ object FantasyAPI {
     val managers = ManagerHandler()
 
     /**
+     * Provides direct access to the Fantasy Premier League's API endpoints. The functions you can call from this do not
+     * perform any post-processing of the responses from the API, only mapping the JSON responses to plain objects.
+     *
+     * In general, you should avoid using this unless any of the functionality built into the handlers does not
+     * accommodate your needs.
+     */
+    val httpClient = Client()
+
+    /**
+     * Updates the number of milliseconds it takes the cache to flush its contents to [flushInterval]. This will flush
+     * the cache once called.
+     */
+    fun setCacheFlushIntervalInMillis(flushInterval: Long) {
+        cache = ExpirableCache(flushInterval)
+    }
+
+    /**
      * Get bootstrap data.
      */
-    internal fun getGeneralInfo(): GeneralResponse = getFromCache(generalInfoCacheKey) { client.getGeneralInfo() }
+    internal fun getGeneralInfo(): GeneralResponse = getFromCache(generalInfoCacheKey) { httpClient.getGeneralInfo() }
 
     /**
      * Get fixture data.
      */
-    internal fun getFixtures(): FixturesResponse = getFromCache(fixturesCacheKey) { client.getFixtures() }
+    internal fun getFixtures(): FixturesResponse = getFromCache(fixturesCacheKey) { httpClient.getFixtures() }
 
     /**
      * Get manager picks data for a specific [gameWeekNum].
      */
     internal fun getManagerPicks(managerId: Long, gameWeekNum: Int): ManagerPicksResponse =
-        getFromCache("$managerPicksCacheKey$managerId") { client.getManagerPicks(managerId, gameWeekNum) }
+        getFromCache("$managerPicksCacheKey$managerId") { httpClient.getManagerPicks(managerId, gameWeekNum) }
 
     /**
      * Check if a value exists in the cache and if so return it. If it doesn't or if the cache has expired, use the

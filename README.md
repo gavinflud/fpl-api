@@ -2,16 +2,28 @@
 
 A Kotlin wrapper around the Fantasy Premier League API.
 
-
 ## Installing
 
-You can access the API wrapper in one of two ways:
+### Maven
 
-1. StableDownload the latest release from the [releases](https://github.com/gavinflud/fpl-api/releases) page.
-2. Clone the repository, and once cloned run `gradle jar` inside the project directory.
+```xml
 
-Doing either of these should provide you with a JAR file that you can include in your project.
+<dependencies>
+    <dependency>
+        <groupId>com.gavinflood.fpl.api</groupId>
+        <artifactId>fpl-api</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+</dependencies>
+```
 
+### Gradle
+
+```groovy
+dependencies {
+    implementation "com.gavinflood.fpl.api:fpl-api:1.0.0"
+}
+```
 
 ## Usage
 
@@ -58,11 +70,20 @@ The second example would return a `Player` object for that specific player, some
 }
 ```
 
-See the documentation section below for a more detailed list of the functionality exposed by the API.
+If none of the services exposed by the `FantasyAPI` object can accommodate what you are trying to do, it also exposes
+a `httpClient` which gives you direct access to the Fantasy Premier League API endpoints.
+
+The following example shows how you can get the bootstrap data:
+
+```kotlin
+FantasyAPI.httpClient.getGeneralInfo()
+```
+
+See the documentation section below for a more detailed list of the functionality exposed by this API.
 
 ## Documentation
 
-The `FantasyAPI` object exposes the below four services:
+The `FantasyAPI` object exposes the below five services:
 
 ### Teams
 
