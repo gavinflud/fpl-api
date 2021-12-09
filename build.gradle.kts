@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization") version "1.5.21"
     id("org.jetbrains.dokka") version "1.6.0"
     `maven-publish`
+    id("signing")
 }
 
 group = "com.gavinflood.fpl.api"
@@ -35,6 +36,20 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 
+tasks.dokkaHtml {
+    outputDirectory.set(buildDir.resolve("javadoc"))
+}
+
+val sourcesJar by tasks.creating(Jar::class) {
+    archiveClassifier.set("sources")
+    from(sourceSets["main"].java.srcDirs)
+}
+
+val javaDocJar by tasks.creating(Jar::class) {
+    archiveClassifier.set("javadoc")
+    from("$buildDir/javadoc")
+}
+
 publishing {
     publications {
         create<MavenPublication>("fpl-api") {
@@ -42,7 +57,54 @@ publishing {
             artifactId = "fpl-api"
             version = version
 
+            signing {
+                sign(publishing.publications["fpl-api"])
+            }
+
             from(components["java"])
+
+            artifact(sourcesJar)
+            artifact(javaDocJar)
+
+            pom {
+                name.set("Fantasy Premier League API Wrapper")
+                description.set("A Kotlin wrapper around the Fantasy Premier League API.")
+                url.set("https://github.com/gavinflud/fpl-api")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("gavinflud")
+                        name.set("Gavin Flood")
+                        email.set("gavin@gavinflood.com")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/gavinflud/fpl-api.git")
+                    developerConnection.set("scm:git:ssh://github.com:gavinflud/fpl-api.git")
+                    url.set("https://github.com/gavinflud/fpl-api")
+                }
+                distributionManagement {
+                    repositories {
+                        maven {
+                            credentials {
+                                username = project.properties["mavenUsername"] as String?
+                                password = project.properties["mavenPassword"] as String?
+                            }
+
+                            if (version.endsWith("-SNAPSHOT")) {
+                                setUrl("https://s01.oss.sonatype.org/content/repositories/snapshots")
+                            } else {
+                                setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

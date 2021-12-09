@@ -1,5 +1,7 @@
 # Fantasy Premier League API Wrapper
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.gavinflood.fpl.api/fpl-api?style=flat-square&versionPrefix=1.0.0)](https://repo1.maven.org/maven2/com/gavinflood/fpl/api/fpl-api/1.0.0/)
+
 A Kotlin wrapper around the Fantasy Premier League API.
 
 ## Installing
