@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.gavinflood.fpl.api"
-version = "1.0.0"
+version = "1.0.1"
 
 var junitVersion = "5.8.1"
 

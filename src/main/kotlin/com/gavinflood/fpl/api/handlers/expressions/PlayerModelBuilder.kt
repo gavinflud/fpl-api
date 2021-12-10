@@ -17,7 +17,7 @@ class PlayerModelBuilder {
     private val maxBudgetConstraintName = "max_budget"
     private val maxPlayersPerTeamConstraintName = "max_for_team_"
     private val maxPlayersPerPositionConstraintName = "max_for_position_"
-    private val lowValuePlayersConstraintName = "low_cost_players"
+    private val lowValuePlayersConstraintName = "low_cost_players_"
     private val minimumCurrentPlayersConstraintName = "current_players_constraint"
     private val minAndMaxPlayersPerPositionConstraintName = "min_max_for_position_"
 
@@ -103,13 +103,15 @@ class PlayerModelBuilder {
      * adds a constraint allowing a max of £4.5m for each of these positions.
      */
     fun addLowValueDefenderAndGoalkeeperConstraint() {
-        val lowCostPlayersConstraint = model.addExpression(lowValuePlayersConstraintName).lower(2)
-        model.variables.forEach { variable ->
-            val player = playersByVariableName.getValue(variable.name)
-            if (listOf(Position.GOALKEEPER.name, Position.DEFENDER.name).contains(player.position.name)
-                && player.currentCost.times(10).toInt() < 45
-            ) {
-                lowCostPlayersConstraint.set(variable, 1)
+        val lowCostGoalkeeperConstraint = model.addExpression("${lowValuePlayersConstraintName}goalkeeper").lower(1)
+        val lowCostDefenderConstraint = model.addExpression("${lowValuePlayersConstraintName}defender").lower(1)
+
+        model.variables.forEach { playerVariable ->
+            val player = playersByVariableName.getValue(playerVariable.name)
+            if (player.position.name == Position.GOALKEEPER.name && player.currentCost.times(10).toInt() < 45) {
+                lowCostGoalkeeperConstraint.set(playerVariable, 1)
+            } else if (player.position.name == Position.DEFENDER.name && player.currentCost.times(10).toInt() < 45) {
+                lowCostDefenderConstraint.set(playerVariable, 1)
             }
         }
     }
