@@ -1,6 +1,7 @@
 # Fantasy Premier League API Wrapper
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.gavinflood.fpl.api/fpl-api?style=flat-square&versionPrefix=1.0.0)](https://repo1.maven.org/maven2/com/gavinflood/fpl/api/fpl-api/1.0.0/)
+[![Maven Central](https://img.shields.io/maven-central/v/com.gavinflood.fpl.api/fpl-api?style=flat-square&versionSuffix=1.0.1)](https://repo1.maven.org/maven2/com/gavinflood/fpl/api/fpl-api/1.0.1/)
+![GitHub](https://img.shields.io/github/license/gavinflud/fpl-api?style=flat-square)
 
 A Kotlin wrapper around the Fantasy Premier League API.
 
@@ -14,7 +15,7 @@ A Kotlin wrapper around the Fantasy Premier League API.
     <dependency>
         <groupId>com.gavinflood.fpl.api</groupId>
         <artifactId>fpl-api</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </dependency>
 </dependencies>
 ```
@@ -23,7 +24,7 @@ A Kotlin wrapper around the Fantasy Premier League API.
 
 ```groovy
 dependencies {
-    implementation "com.gavinflood.fpl.api:fpl-api:1.0.0"
+    implementation "com.gavinflood.fpl.api:fpl-api:1.0.1"
 }
 ```
 
