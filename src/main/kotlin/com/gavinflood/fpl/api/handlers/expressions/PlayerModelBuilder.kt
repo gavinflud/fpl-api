@@ -7,12 +7,16 @@ import com.gavinflood.fpl.api.domain.Position
 import com.gavinflood.fpl.api.domain.Team
 import org.ojalgo.optimisation.ExpressionsBasedModel
 import org.ojalgo.optimisation.Variable
+import org.slf4j.LoggerFactory
+import java.lang.Integer.max
 import java.math.BigDecimal
 
 /**
  * Helps with building an expression-based model where players are the variables.
  */
-class PlayerModelBuilder {
+class PlayerModelBuilder(private val numUpcomingGameWeeksToConsider: Int = 3) {
+
+    private val logger = LoggerFactory.getLogger(PlayerModelBuilder::class.java)
 
     private val maxBudgetConstraintName = "max_budget"
     private val maxPlayersPerTeamConstraintName = "max_for_team_"
@@ -20,6 +24,7 @@ class PlayerModelBuilder {
     private val lowValuePlayersConstraintName = "low_cost_players_"
     private val minimumCurrentPlayersConstraintName = "current_players_constraint"
     private val minAndMaxPlayersPerPositionConstraintName = "min_max_for_position_"
+    private val maxNumberOfPlayersConstraintName = "max_number_of_players"
 
     private val model = ExpressionsBasedModel()
     private val playersByVariableName = FantasyAPI.players.get().associateBy { player -> "player_${player.id}" }
@@ -134,14 +139,14 @@ class PlayerModelBuilder {
      * There is a min and max number of players needed in each position when picking a team. There may only be:
      *   - 1 goalkeeper
      *   - minimum of 3 and maximum of 5 defenders
-     *   - minimum of 3 and maximum of 5 midfielder
+     *   - minimum of 2 and maximum of 5 midfielder
      *   - minimum of 1 and maximum of 3 forwards
      */
     fun addMinAndMaxPlayersPerPositionConstraint() {
         mapOf(
             Position.GOALKEEPER.name to 1..1,
             Position.DEFENDER.name to 3..5,
-            Position.MIDFIELDER.name to 3..5,
+            Position.MIDFIELDER.name to 2..5,
             Position.FORWARD.name to 1..3
         ).forEach { (name, range) ->
             val constraint = model.addExpression("$minAndMaxPlayersPerPositionConstraintName${name.lowercase()}")
@@ -153,14 +158,23 @@ class PlayerModelBuilder {
     }
 
     /**
-     * Selecting the top [numToSelect] players after running maximize() or minimize().
+     * Only allow [maxNumberOfPlayers] to be selected from the variables.
+     */
+    fun addMaxNumberOfPlayersConstraint(maxNumberOfPlayers: Int) {
+        val maxNumberOfPlayersConstraint =
+            model.addExpression(maxNumberOfPlayersConstraintName).lower(maxNumberOfPlayers).upper(maxNumberOfPlayers)
+        model.variables.forEach { maxNumberOfPlayersConstraint.set(it, 1) }
+    }
+
+    /**
+     * Selecting the top [numToSelect] players after running maximize() or minimize() and sorting by their weight.
      */
     fun getSelectedPlayersAfterOptimization(numToSelect: Int): List<Player> {
         return model.variables
             .filter { it.value.compareTo(BigDecimal.ZERO) == 1 }
-            .toMutableList()
-            .apply { this.sortByDescending { it.value } }
+            .sortedByDescending { it.value }
             .subList(0, numToSelect)
+            .sortedByDescending { it.contributionWeight }
             .map { playersByVariableName.getValue(it.name) }
     }
 
@@ -169,11 +183,31 @@ class PlayerModelBuilder {
      * with their fixture difficulty score.
      */
     private fun calculateUpcomingFixtureDifficultyPerTeam(): Map<Int, Int> {
-        val gameWeekIds = FantasyAPI.gameWeeks.getNextGameWeeks(3).map { it.id }
+        val gameWeekIds = FantasyAPI.gameWeeks.getNextGameWeeks(numUpcomingGameWeeksToConsider).map { it.id }
         val upcomingFixtures = FantasyAPI.fixtures.get()
             .filter { fixture -> fixture.gameWeek != null && gameWeekIds.contains(fixture.gameWeek.id) }
+
         return FantasyAPI.teams.get()
-            .associateWith { team -> upcomingFixtures.sumOf { calculateFixtureDifficulty(team, it) } }
+            .associateWith { team ->
+                val fixtures = upcomingFixtures.filter { it.homeTeam.id == team.id || it.awayTeam.id == team.id }
+                val fixturesDifficulty = upcomingFixtures.sumOf { calculateFixtureDifficulty(team, it) }
+
+                // If the team does not have a fixture in one of the game-weeks, that gets set to the max difficulty
+                // to try and prevent the model from selecting them
+                val penaltyForMissingFixtures = if (fixtures.size < numUpcomingGameWeeksToConsider) {
+                    if (fixtures.isEmpty()) numUpcomingGameWeeksToConsider * 5 + 1
+                    else (fixtures.size % numUpcomingGameWeeksToConsider) * 5
+                } else 0
+
+                // For every extra fixture a team has (e.g. double game-week), that deducts the max difficulty for a
+                // fixture from their total to encourage the model to select them
+                val bonusForExtraFixtures = if (fixtures.size > numUpcomingGameWeeksToConsider) {
+                    (numUpcomingGameWeeksToConsider - fixtures.size) * 5
+                } else 0
+
+                // Final difficulty value is a combination of the three
+                max(fixturesDifficulty + penaltyForMissingFixtures - bonusForExtraFixtures, 0)
+            }
             .mapKeys { it.key.id }
     }
 
@@ -184,16 +218,25 @@ class PlayerModelBuilder {
         val upcomingFixturesDifficultyByTeam = calculateUpcomingFixtureDifficultyPerTeam()
 
         model.addVariables(playersToAddByVariableName.map { (variableName, player) ->
-            val upcomingFixturesDifficulty = upcomingFixturesDifficultyByTeam[player.team.id] ?: 5
+            val upcomingFixturesDifficulty = upcomingFixturesDifficultyByTeam[player.team.id]!!
+            val maxDifficultyPlusOne = (numUpcomingGameWeeksToConsider * 5) + 1
+            val fitnessMultiplier = player.chanceOfPlayingNextRound?.div(100.0) ?: 1.0
+            val weight =
+                player.totalPoints * player.form * (maxDifficultyPlusOne - upcomingFixturesDifficulty) * fitnessMultiplier
 
-            // 16 is used here as the max difficulty for three fixtures is 15, so need to avoid multiplying by zero
-            val weight = player.totalPoints * player.form * (16 - upcomingFixturesDifficulty)
+            logger.trace(
+                "Adding variable for $variableName with totalPoints:${player.totalPoints}, form:${player.form}, " +
+                    "upcomingFixturesDifficulty:$upcomingFixturesDifficulty, fitnessMultiplier:$fitnessMultiplier"
+            )
+
             Variable.make(variableName)
                 .lower(0)
                 .upper(1)
                 .weight(weight)
                 .integer(true)
         })
+
+        logger.debug("Added ${model.variables.size} to ExpressionsBasedModel")
     }
 
     /**

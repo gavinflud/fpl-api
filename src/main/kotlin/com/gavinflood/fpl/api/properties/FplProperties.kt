@@ -1,17 +1,21 @@
 package com.gavinflood.fpl.api.properties
 
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.regex.Pattern
 
 /**
  * Wrapper for custom application properties.
  */
-class FplProperties {
+internal class FplProperties {
 
+    private val logger = LoggerFactory.getLogger(FplProperties::class.java)
+    private val propertiesFileName = "fpl.properties"
     private val properties = Properties()
 
     init {
-        val inputStream = FplProperties::class.java.classLoader.getResourceAsStream("fpl.properties")
+        logger.debug("Loading properties from $propertiesFileName")
+        val inputStream = FplProperties::class.java.classLoader.getResourceAsStream(propertiesFileName)
         properties.load(inputStream)
     }
 

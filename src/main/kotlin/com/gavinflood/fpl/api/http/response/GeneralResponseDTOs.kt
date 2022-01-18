@@ -3,6 +3,9 @@ package com.gavinflood.fpl.api.http.response
 import java.time.LocalDateTime
 import java.util.*
 
+/**
+ * Raw response data from the bootstrap-static endpoint.
+ */
 data class GeneralResponse(
     val events: List<GeneralResponseEvent>,
     val phases: List<GeneralResponsePhase>,
@@ -68,8 +71,8 @@ data class GeneralResponseTeam(
 )
 
 data class GeneralResponsePlayer(
-    val chance_of_playing_next_round: Int,
-    val chance_of_playing_this_round: Int,
+    val chance_of_playing_next_round: Int?,
+    val chance_of_playing_this_round: Int?,
     val code: Long,
     val cost_change_event: Int,
     val cost_change_event_fall: Int,

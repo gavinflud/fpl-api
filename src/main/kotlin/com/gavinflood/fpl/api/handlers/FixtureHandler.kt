@@ -12,40 +12,64 @@ class FixtureHandler : Handler() {
      * Get all fixtures for the season.
      */
     fun get(): List<Fixture> {
-        val generalInfo = FantasyAPI.getGeneralInfo()
-
-        val findTeamById = { id: Int ->
-            generalInfo.teams
-                .map { teamDTO -> mapper.mapTeam(teamDTO) }
-                .first { team -> team.id == id }
-        }
-
-        val findPlayerById = { id: Int ->
-            generalInfo.elements
-                .map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById(playerDTO.team)) }
-                .find { player -> player.id == id }
-        }
-
-        val findGameWeekById = { id: Int ->
-            generalInfo.events
-                .map { gameWeekDTO -> mapper.mapGameWeek(gameWeekDTO, findPlayerById) }
-                .find { gameWeek -> gameWeek.id == id }
-        }
-
-        return FantasyAPI.getFixtures().map { fixtureDTO ->
-            mapper.mapFixture(fixtureDTO, findGameWeekById, findTeamById, findPlayerById)
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
+        return FantasyAPI.httpClient.getFixtures().map { fixtureDTO ->
+            mapper.mapFixture(
+                fixtureDTO,
+                findGameWeekById(generalInfo),
+                findTeamById(generalInfo),
+                findPlayerById(generalInfo)
+            )
         }
     }
 
     /**
      * Get a single fixture given its [id].
      */
-    fun get(id: Int): Fixture = get().first { fixture -> fixture.id == id }
+    fun get(id: Int): Fixture {
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
+        return FantasyAPI.httpClient.getFixtures().first { it.id == id }.run {
+            mapper.mapFixture(
+                this,
+                findGameWeekById(generalInfo),
+                findTeamById(generalInfo),
+                findPlayerById(generalInfo)
+            )
+        }
+    }
 
     /**
      * Get all fixtures for a team given its [teamId].
      */
-    fun getByTeam(teamId: Int): List<Fixture> =
-        get().filter { fixture -> fixture.homeTeam.id == teamId || fixture.awayTeam.id == teamId }
+    fun getByTeam(teamId: Int): List<Fixture> {
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
+        return FantasyAPI.httpClient.getFixtures()
+            .filter { fixture -> fixture.team_h == teamId || fixture.team_a == teamId }
+            .map {
+                mapper.mapFixture(
+                    it,
+                    findGameWeekById(generalInfo),
+                    findTeamById(generalInfo),
+                    findPlayerById(generalInfo)
+                )
+            }
+    }
+
+    /**
+     * Get all fixtures for a given [gameWeekId].
+     */
+    fun getByGameWeek(gameWeekId: Int): List<Fixture> {
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
+        return FantasyAPI.httpClient.getFixtures()
+            .filter { fixture -> fixture.event == gameWeekId }
+            .map {
+                mapper.mapFixture(
+                    it,
+                    findGameWeekById(generalInfo),
+                    findTeamById(generalInfo),
+                    findPlayerById(generalInfo)
+                )
+            }
+    }
 
 }

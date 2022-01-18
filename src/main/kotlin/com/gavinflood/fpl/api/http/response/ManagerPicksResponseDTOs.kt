@@ -1,5 +1,8 @@
 package com.gavinflood.fpl.api.http.response
 
+/**
+ * Raw response data from the manager picks endpoint.
+ */
 data class ManagerPicksResponse(
     //val active_chip: String,
     val automatic_subs: List<ManagerPicksResponseAutomaticSub>,

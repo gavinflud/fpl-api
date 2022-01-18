@@ -1,5 +1,8 @@
 package com.gavinflood.fpl.api.http.response
 
+/**
+ * Raw response data from the game-week endpoint.
+ */
 data class GameweekResponse(
     val elements: List<GameweekResponsePlayerDetail>
 ) : DTO

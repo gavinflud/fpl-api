@@ -1,7 +1,11 @@
 package com.gavinflood.fpl.api.http.response
 
+import java.time.LocalDateTime
 import java.util.*
 
+/**
+ * Raw response data from the classic league standings endpoint.
+ */
 data class ClassicLeagueResponse(
     val new_entries: ClassicLeagueResponseNewEntries,
     val last_updated_data: Date,
@@ -26,7 +30,7 @@ data class ClassicLeagueResponseNewEntry(
 data class ClassicLeagueResponseInfo(
     val id: Long,
     val name: String,
-    val created: Date,
+    val created: LocalDateTime,
     val closed: Boolean,
     val max_entries: Int,
     val league_type: String,

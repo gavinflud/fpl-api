@@ -22,6 +22,14 @@ class Fixture(
     val stats: List<Stat>,
 ) {
 
+    /**
+     * Returns true if the kickoff time for this fixture was over 3 hours ago.
+     */
     fun isFinished(): Boolean = kickoff!!.isBefore(LocalDateTime.now().minusHours(3))
+
+    /**
+     * Returns true if the [team] is involved in this fixture.
+     */
+    fun isTeamInvolved(team: Team) = homeTeam.id == team.id || awayTeam.id == team.id
 
 }

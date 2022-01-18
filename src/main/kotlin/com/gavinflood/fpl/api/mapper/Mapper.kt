@@ -6,7 +6,7 @@ import com.gavinflood.fpl.api.http.response.*
 /**
  * Maps data in DTOs returned from the official API to custom, more refined domain objects.
  */
-class Mapper {
+internal class Mapper {
 
     /**
      * Maps the data in [eventDTO] to a [GameWeek] object.
@@ -18,6 +18,7 @@ class Mapper {
         eventDTO.highest_score,
         eventDTO.is_current,
         eventDTO.is_next,
+        eventDTO.finished,
         eventDTO.chip_plays.map { mapChipPlayTotal(it) },
         eventDTO.transfers_made,
         eventDTO.deadline_time,
@@ -69,7 +70,8 @@ class Mapper {
         playerDTO.total_points,
         playerDTO.minutes,
         playerDTO.transfers_in,
-        playerDTO.transfers_out
+        playerDTO.transfers_out,
+        playerDTO.chance_of_playing_next_round
     )
 
     /**
@@ -125,6 +127,36 @@ class Mapper {
     }
 
     /**
+     * Maps the data in [managerDTO] to a [Manager] object.
+     */
+    fun mapManager(managerDTO: ManagerResponse, historyEntries: List<ManagerHistoryEntry>) =
+        Manager(
+            managerDTO.id,
+            managerDTO.player_first_name,
+            managerDTO.player_last_name,
+            managerDTO.name,
+            historyEntries
+        )
+
+    /**
+     * Maps the data in [managerHistoryDTO] to a list of [ManagerHistoryEntry] objects.
+     */
+    fun mapManagerHistory(managerHistoryDTO: ManagerHistoryResponse, getGameWeek: (id: Int) -> GameWeek?) =
+        managerHistoryDTO.current.map { historyEntry ->
+            ManagerHistoryEntry(
+                getGameWeek(historyEntry.event)!!,
+                historyEntry.points,
+                historyEntry.total_points,
+                historyEntry.rank,
+                historyEntry.bank,
+                historyEntry.value,
+                historyEntry.event_transfers,
+                historyEntry.event_transfers_cost,
+                historyEntry.points_on_bench
+            )
+        }
+
+    /**
      * Maps the data in [managerPicksDTO] to a [ManagerTeam] object. Requires a [getPlayer] lambda that takes an [Int]
      * argument.
      */
@@ -145,4 +177,29 @@ class Mapper {
         managerPickDTO.is_captain,
         managerPickDTO.is_vice_captain
     )
+
+    fun mapClassicLeague(
+        classicLeagueDTO: ClassicLeagueResponse,
+        retrieveStandings: (pageNumber: Int) -> ClassicLeagueStandingsWrapper
+    ) = ClassicLeague(
+        classicLeagueDTO.league.id,
+        classicLeagueDTO.league.name,
+        classicLeagueDTO.league.created,
+        ClassicLeagueStandingsWrapper(
+            classicLeagueDTO.standings.results.map { mapClassicLeagueStanding(it) },
+            classicLeagueDTO.standings.has_next
+        ),
+        retrieveStandings
+    )
+
+    fun mapClassicLeagueStanding(classicLeagueStandingDTO: ClassicLeagueResponseResult) = ClassicLeagueStanding(
+        classicLeagueStandingDTO.id,
+        classicLeagueStandingDTO.player_name,
+        classicLeagueStandingDTO.entry_name,
+        classicLeagueStandingDTO.rank,
+        classicLeagueStandingDTO.last_rank,
+        classicLeagueStandingDTO.total,
+        classicLeagueStandingDTO.event_total
+    )
+
 }
