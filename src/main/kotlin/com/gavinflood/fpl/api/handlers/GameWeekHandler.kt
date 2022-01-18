@@ -2,7 +2,6 @@ package com.gavinflood.fpl.api.handlers
 
 import com.gavinflood.fpl.api.FantasyAPI
 import com.gavinflood.fpl.api.domain.GameWeek
-import java.time.LocalDateTime
 
 /**
  * Exposes functions that can be called to access data related to game weeks.
@@ -13,21 +12,8 @@ class GameWeekHandler : Handler() {
      * Get all game-weeks for the season.
      */
     fun get(): List<GameWeek> {
-        val generalInfo = FantasyAPI.getGeneralInfo()
-
-        val findTeamById = { id: Int ->
-            generalInfo.teams
-                .map { teamDTO -> mapper.mapTeam(teamDTO) }
-                .first { team -> team.id == id }
-        }
-
-        val findPlayerById = { id: Int ->
-            generalInfo.elements
-                .map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById(playerDTO.team)) }
-                .firstOrNull { player -> player.id == id }
-        }
-
-        return generalInfo.events.map { event -> mapper.mapGameWeek(event, findPlayerById) }
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
+        return generalInfo.events.map { event -> mapper.mapGameWeek(event, findPlayerById(generalInfo)) }
     }
 
     /**
@@ -45,12 +31,21 @@ class GameWeekHandler : Handler() {
      */
     fun getNextGameWeek() = get().first { gameWeek -> gameWeek.isNext }
 
+    /**
+     * Get the next [numberOfGameWeeks] as a list.
+     */
     fun getNextGameWeeks(numberOfGameWeeks: Int): List<GameWeek> {
         val currentGameWeek = getCurrentGameWeek()
         return get().filter { gameWeek ->
             gameWeek.id > currentGameWeek.id && gameWeek.id <= currentGameWeek.id.plus(numberOfGameWeeks)
         }
     }
+
+    /**
+     * Get the latest finished game week (not always going to be the one before [GameWeek.isCurrent] is true).
+     */
+    fun getLatestFinishedGameWeek() = get().filter { gameWeek -> gameWeek.isFinished }
+        .maxByOrNull { gameWeek -> gameWeek.deadline }!!
 
     /**
      * Get the game week with the highest score so far.
@@ -65,7 +60,7 @@ class GameWeekHandler : Handler() {
      * Get the average score per week to date.
      */
     fun getAverageScoreToDate(): Int {
-        val gameWeeks = get().filter { gameWeek -> gameWeek.deadline.isBefore(LocalDateTime.now()) }
+        val gameWeeks = get().filter { gameWeek -> gameWeek.isFinished }
         return gameWeeks.sumOf { gameWeek -> gameWeek.averageScore }.div(gameWeeks.size)
     }
 

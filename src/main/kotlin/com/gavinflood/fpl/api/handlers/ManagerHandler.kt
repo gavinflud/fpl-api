@@ -1,6 +1,7 @@
 package com.gavinflood.fpl.api.handlers
 
 import com.gavinflood.fpl.api.FantasyAPI
+import com.gavinflood.fpl.api.domain.Manager
 import com.gavinflood.fpl.api.domain.Player
 import com.gavinflood.fpl.api.handlers.expressions.PlayerModelBuilder
 
@@ -10,11 +11,21 @@ import com.gavinflood.fpl.api.handlers.expressions.PlayerModelBuilder
 class ManagerHandler : Handler() {
 
     /**
+     * Get a single manager given their [managerId].
+     */
+    fun get(managerId: Long): Manager {
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
+        val historyEntries =
+            mapper.mapManagerHistory(FantasyAPI.httpClient.getManagerHistory(managerId), findGameWeekById(generalInfo))
+        return mapper.mapManager(FantasyAPI.httpClient.getManager(managerId), historyEntries)
+    }
+
+    /**
      * Get a managers players for the current game week.
      */
     fun getPlayersForCurrentGameWeek(managerId: Long): List<Player> {
         return mapper.mapManagerTeam(
-            FantasyAPI.getManagerPicks(
+            FantasyAPI.httpClient.getManagerPicks(
                 managerId,
                 getCurrentGameWeekId()
             )
@@ -26,13 +37,27 @@ class ManagerHandler : Handler() {
      */
     fun getRecommendedTransfersForNextGameWeek(managerId: Long, numFreeTransfers: Int): Map<Player, Player> {
         val currentPlayers = getPlayersForCurrentGameWeek(managerId)
+        return getRecommendedTransfersForNextGameWeek(currentPlayers, numFreeTransfers)
+    }
+
+    /**
+     * Given a list of [currentPlayers], recommend the best transfers to make that could improve the team.
+     */
+    fun getRecommendedTransfersForNextGameWeek(
+        currentPlayers: List<Player>,
+        numFreeTransfers: Int
+    ): Map<Player, Player> {
+        if (numFreeTransfers <= 0) {
+            return emptyMap()
+        }
+
         val modelBuilder = PlayerModelBuilder()
         modelBuilder.initializeAllPlayerVariables()
         modelBuilder.addMaxBudgetConstraint()
         modelBuilder.addMaxPlayersPerTeamConstraint()
         modelBuilder.addMaxPlayersPerPositionConstraint()
         modelBuilder.addLowValueDefenderAndGoalkeeperConstraint()
-        modelBuilder.addMinimumCurrentPlayersConstraint(currentPlayers, 15 - numFreeTransfers)
+        modelBuilder.addMinimumCurrentPlayersConstraint(currentPlayers, currentPlayers.size - numFreeTransfers)
         modelBuilder.build().maximise()
 
         val newPlayers = modelBuilder.getSelectedPlayersAfterOptimization(15)

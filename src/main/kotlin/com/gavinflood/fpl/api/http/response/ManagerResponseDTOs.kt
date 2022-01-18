@@ -2,6 +2,9 @@ package com.gavinflood.fpl.api.http.response
 
 import java.util.*
 
+/**
+ * Raw response data from the manager endpoint.
+ */
 data class ManagerResponse(
     val id: Long,
     val joined_time: Date,
@@ -49,7 +52,7 @@ data class ManagerResponseLeague(
     val entry_can_invite: Boolean,
     val has_cup: Boolean,
     val cup_league: Long,
-    val cup_qualified: Long,
+    val cup_qualified: Boolean,
     val entry_rank: Int,
     val entry_last_rank: Int
 )

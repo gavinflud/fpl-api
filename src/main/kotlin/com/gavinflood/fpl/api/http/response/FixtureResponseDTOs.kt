@@ -2,8 +2,14 @@ package com.gavinflood.fpl.api.http.response
 
 import java.time.LocalDateTime
 
+/**
+ * A list of [FixturesResponseDetail] objects.
+ */
 class FixturesResponse : ArrayList<FixturesResponseDetail>(), DTO
 
+/**
+ * Raw response data from the fixtures endpoint.
+ */
 data class FixturesResponseDetail(
     val code: Long,
     val event: Int,

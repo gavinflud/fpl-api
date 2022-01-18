@@ -1,0 +1,62 @@
+{
+  "new_entries": {
+    "has_next": false,
+    "page": 1,
+    "results": []
+  },
+  "last_updated_data": "2022-01-15T17:01:55Z",
+  "league": {
+    "id": 224193,
+    "name": "The Fantasy Kickabout",
+    "created": "2021-07-16T16:27:14.594330Z",
+    "closed": false,
+    "max_entries": null,
+    "league_type": "x",
+    "scoring": "c",
+    "admin_entry": 122301,
+    "start_event": 1,
+    "code_privacy": "p",
+    "has_cup": true,
+    "cup_league": null,
+    "rank": null
+  },
+  "standings": {
+    "has_next": false,
+    "page": 2,
+    "results": [
+      {
+        "id": 7094677,
+        "event_total": 23,
+        "player_name": "Pat Bloggs",
+        "rank": 51,
+        "last_rank": 50,
+        "rank_sort": 51,
+        "total": 930,
+        "entry": 1306599,
+        "entry_name": "Sample Team 2"
+      },
+      {
+        "id": 41011793,
+        "event_total": 3,
+        "player_name": "Pat Bloggs",
+        "rank": 52,
+        "last_rank": 51,
+        "rank_sort": 52,
+        "total": 892,
+        "entry": 5871934,
+        "entry_name": "Sample Team 2"
+      },
+      {
+        "id": 42162187,
+        "event_total": 20,
+        "player_name": "Pat Bloggs",
+        "rank": 53,
+        "last_rank": 52,
+        "rank_sort": 53,
+        "total": 595,
+        "entry": 6012074,
+        "entry_name": "Sample Team 2"
+      }
+    ]
+  }
+}

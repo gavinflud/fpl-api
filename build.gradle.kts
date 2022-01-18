@@ -5,31 +5,41 @@ plugins {
     kotlin("plugin.serialization") version "1.5.21"
     id("org.jetbrains.dokka") version "1.6.0"
     `maven-publish`
-    id("signing")
+    signing
+    jacoco
 }
 
 group = "com.gavinflood.fpl.api"
-version = "1.0.1"
+version = "2.0.0"
 
-var junitVersion = "5.8.1"
+var junitVersion = "5.8.2"
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     implementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1")
     implementation("com.squareup.okhttp3:mockwebserver:4.9.3")
     implementation("org.ojalgo:ojalgo:49.2.1")
+    implementation("org.slf4j:slf4j-api:1.7.32")
+    testImplementation("ch.qos.logback:logback-core:1.2.10")
+    testImplementation("ch.qos.logback:logback-classic:1.2.10")
+    testImplementation("org.mockito:mockito-core:4.2.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
 }
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
 }
 
 tasks.withType<KotlinCompile> {

@@ -1,5 +1,8 @@
 package com.gavinflood.fpl.api.http.response
 
+/**
+ * Raw response data from the manager history endpoint.
+ */
 data class ManagerHistoryResponse(
     val current: List<ManagerHistoryResponseCurrentDetail>,
     val past: List<ManagerHistoryResponsePastDetail>

@@ -1,5 +1,6 @@
 package com.gavinflood.fpl.api.cache
 
+import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 /**
@@ -9,6 +10,7 @@ class ExpirableCache(
     private val flushInterval: Long = TimeUnit.SECONDS.toMillis(30)
 ) : Cache {
 
+    private val logger = LoggerFactory.getLogger(ExpirableCache::class.java)
     private var timeLastFlushed = System.nanoTime()
     private val cache = HashMap<Any, Any>()
 
@@ -38,6 +40,7 @@ class ExpirableCache(
      */
     private fun recycle() {
         if (System.nanoTime() - timeLastFlushed >= TimeUnit.MILLISECONDS.toNanos(flushInterval)) {
+            logger.debug("Clearing the cache as ${flushInterval}ms have passed")
             clear()
             timeLastFlushed = System.nanoTime()
         }

@@ -15,13 +15,8 @@ class PlayerHandler : Handler() {
      * Get all players in the league.
      */
     fun get(): List<Player> {
-        val generalInfo = FantasyAPI.getGeneralInfo()
-        val findTeamById = { id: Int ->
-            generalInfo.teams
-                .map { teamDTO -> mapper.mapTeam(teamDTO) }
-                .first { team -> team.id == id }
-        }
-        return generalInfo.elements.map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById) }
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
+        return generalInfo.elements.map { playerDTO -> mapper.mapPlayer(playerDTO, findTeamById(generalInfo)) }
     }
 
     /**
@@ -39,7 +34,7 @@ class PlayerHandler : Handler() {
      * Get all players in a team given its [id].
      */
     fun getByTeam(id: Int): List<Player> {
-        val generalInfo = FantasyAPI.getGeneralInfo()
+        val generalInfo = FantasyAPI.httpClient.getGeneralInfo()
         val team = mapper.mapTeam(generalInfo.teams.first { it.id == id })
         return generalInfo.elements
             .filter { playerDTO -> playerDTO.team == id }
@@ -82,7 +77,7 @@ class PlayerHandler : Handler() {
         getBestValuePlayers(numberToGet) { player -> player.position == position }
 
     /**
-     * Get the best possible current squad based on total points so far this season.
+     * Get the best possible squad based on total points so far this season, current form, and upcoming fixtures.
      */
     fun getBestPossibleTeamBasedOnCurrentSeason(): List<Player> {
         val modelBuilder = PlayerModelBuilder()
@@ -96,15 +91,64 @@ class PlayerHandler : Handler() {
     }
 
     /**
+     * Get the best possible squad based on total points so far this season, current form, and the next fixture.
+     */
+    fun getBestPossibleTeamForFreeHit(): List<Player> {
+        val modelBuilder = PlayerModelBuilder(1)
+        modelBuilder.initializeAllPlayerVariables()
+        modelBuilder.addMaxBudgetConstraint()
+        modelBuilder.addMaxPlayersPerTeamConstraint()
+        modelBuilder.addMaxPlayersPerPositionConstraint()
+        modelBuilder.addLowValueDefenderAndGoalkeeperConstraint()
+        modelBuilder.build().maximise()
+        return modelBuilder.getSelectedPlayersAfterOptimization(15)
+    }
+
+    /**
+     * Recommend the best players in a given [position] based on total points so far this season, current form, and the
+     * upcoming fixtures.
+     */
+    fun getRecommendedPlayersByPosition(position: Position, numberToRecommend: Int = 5): List<Player> {
+        val modelBuilder = PlayerModelBuilder()
+        modelBuilder.initializeSpecifiedPlayerVariables(getByPosition(position))
+        modelBuilder.addMaxNumberOfPlayersConstraint(numberToRecommend)
+        modelBuilder.build().maximise()
+        return modelBuilder.getSelectedPlayersAfterOptimization(numberToRecommend)
+    }
+
+    /**
+     * Recommend players in a specific [position] that aren't as commonly selected by managers. Limit the number of
+     * results with [numberToRecommend] and change to "owned by" percentage you want to consider using
+     * [maxOwnedByPercent].
+     */
+    fun getRecommendedDifferentialsByPosition(
+        position: Position,
+        numberToRecommend: Int = 5,
+        maxOwnedByPercent: Int = 10
+    ): List<Player> {
+        val players = getByPosition(position).filter { player -> player.selectedByPercentage <= maxOwnedByPercent }
+        val modelBuilder = PlayerModelBuilder()
+        modelBuilder.initializeSpecifiedPlayerVariables(players)
+        modelBuilder.addMaxNumberOfPlayersConstraint(numberToRecommend)
+        modelBuilder.build().maximise()
+        return modelBuilder.getSelectedPlayersAfterOptimization(numberToRecommend)
+    }
+
+    /**
      * Get the best value players. Results limited to top [numberToGet] and can be filtered by passing a [condition].
      * The best value is defined as having the highest total points when divided by the player's current cost.
      */
     private fun getBestValuePlayers(numberToGet: Int, condition: (player: Player) -> Boolean): List<Player> {
-        val players = get().filter(condition).toMutableList()
-        players.sortByDescending { player ->
-            player.totalPoints.toFloat().div(player.currentCost)
+        if (numberToGet <= 0) {
+            return emptyList()
         }
-        return players.subList(0, numberToGet)
+
+        return get()
+            .filter(condition)
+            .sortedByDescending { player ->
+                player.totalPoints.toFloat().div(player.currentCost)
+            }
+            .subList(0, numberToGet)
     }
 
     /**

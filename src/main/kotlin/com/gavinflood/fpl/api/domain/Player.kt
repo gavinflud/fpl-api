@@ -20,7 +20,8 @@ class Player(
     val totalPoints: Int,
     val totalMinutes: Int,
     val transfersIn: Int,
-    val transfersOut: Int
+    val transfersOut: Int,
+    val chanceOfPlayingNextRound: Int?
 )
 
 /**

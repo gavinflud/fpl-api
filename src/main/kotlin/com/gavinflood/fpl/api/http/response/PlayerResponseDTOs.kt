@@ -2,6 +2,9 @@ package com.gavinflood.fpl.api.http.response
 
 import java.util.*
 
+/**
+ * Raw response data from the player summary endpoint.
+ */
 data class PlayerResponse(
     val fixtures: List<PlayerResponseFixture>,
     val history: List<PlayerResponseHistory>,
